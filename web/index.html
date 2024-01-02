@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Fractal Game Studios - DateTime</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="Fractal Game Studios - DateTime">
+        <meta name="author" content="Fractal Game Studios">
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    </head>
+    <body>
+        <script>
+            $(function () {
+                window.addEventListener("message", function (event) {
+                    print(event.data.action);
+                    if (event.data.action == "time") {
+                        var time = new Date();
+                        var day = time.getDate();
+                        var month = time.getMonth() + 1;
+                        var year = time.getFullYear();
+                        var hour = time.getHours();
+                        var minutes = time.getMinutes();
+                        var seconds = time.getSeconds();
+                        
+                        var localTime = formatLocalTime({
+                            data: {
+                                hour: hour,
+                                minutes: minutes,
+                                seconds: seconds,
+                                format: event.data.format,
+                                notation: event.data.notation,
+                                translation: event.data.months
+                            }
+                        });
+                        
+                        $.post("https://fractal_datetime/sendTime", JSON.stringify({
+                            time: localTime
+                        }));
+                    } else if (event.data.action == "datetime") {
+                        var time = new Date();
+                        var day = time.getDate();
+                        var month = time.getMonth() + 1;
+                        var year = time.getFullYear();
+                        var hour = time.getHours();
+                        var minutes = time.getMinutes();
+                        var seconds = time.getSeconds();
+                        
+                        var localTime = formatLocalTime({
+                            data: {
+                                hour: hour,
+                                minutes: minutes,
+                                seconds: seconds,
+                                day: day,
+                                month: month,
+                                year: year,
+                                format: event.data.format,
+                                notation: event.data.notation,
+                                translation: event.data.months
+                            }
+                        });
+                        
+                        $.post("https://fractal_datetime/sendTime", JSON.stringify({
+                            time: localTime
+                        }));
+                    } else if (event.data.action == "date") {
+                        var time = new Date();
+                        var day = time.getDate();
+                        var month = time.getMonth() + 1;
+                        var year = time.getFullYear();
+                        
+                        var localTime = formatLocalTime({
+                            data: {
+                                day: day,
+                                month: month,
+                                year: year,
+                                notation: event.data.notation,
+                                translation: event.data.months
+                            }
+                        });
+                        
+                        $.post("https://fractal_datetime/sendTime", JSON.stringify({
+                            time: localTime
+                        }));
+                    }
+                });
+
+                function formatLocalTime(event) {
+                    let formattedTime = '';
+                    let formattedDate = '';
+                    let ampm = '';
+                    let monthNames = event.data.translation || [];
+
+                    if (event.data.hour !== undefined) {
+                        let hour = event.data.hour;
+                        let minutes = event.data.minutes !== undefined ? event.data.minutes : '00';
+                        let seconds = event.data.seconds !== undefined ? event.data.seconds : '00';
+                        ampm = hour >= 12 && event.data.format === "12" ? ' PM' : ' AM';
+                        let formattedHour = event.data.format === "12" ? (hour % 12 || 12) : hour;
+
+                        formattedHour = formattedHour.toString().padStart(2, '0');
+                        minutes = minutes.toString().padStart(2, '0');
+                        seconds = seconds.toString().padStart(2, '0');
+
+                        formattedTime = formattedHour + ":" + minutes + ":" + seconds;
+                        if (event.data.format === "12") {
+                            formattedTime += ampm;
+                        }
+                    }
+
+                    if (event.data.day !== undefined && event.data.month !== undefined && event.data.year !== undefined) {
+                        let day = event.data.day.toString().padStart(2, '0');
+                        let monthNumber = event.data.month.toString().padStart(2, '0');
+                        let monthName = monthNames[event.data.month - 1] || monthNumber;
+                        let year = event.data.year;
+
+                        switch (event.data.notation) {
+                            case "American":
+                                formattedDate = monthName + "/" + day + "/" + year;
+                                break;
+                            case "European":
+                                formattedDate = day + "/" + monthName + "/" + year;
+                                break;
+                            case "ISO 8601":
+                                formattedDate = year + "-" + monthNumber + "-" + day;
+                                break;
+                        }
+                    }
+
+                    console.log(formattedDate + (formattedDate && formattedTime ? " " : "") + formattedTime);
+
+                    return formattedDate + (formattedDate && formattedTime ? " " : "") + formattedTime;
+                }
+            });
+        </script>
+    </body>
+</html>
